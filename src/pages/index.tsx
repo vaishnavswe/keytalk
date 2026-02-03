@@ -111,7 +111,7 @@ export default function Home() {
       console.log("[2/3] Creating XMTP client (timeout: 45s)...");
       
       // 45 second timeout for Vercel
-      const timeoutPromise = new Promise((_, reject) => {
+      const timeoutPromise = new Promise<never>((_, reject) => {
         setTimeout(() => reject(new Error("Connection timed out. Please refresh and try again.")), 45000);
       });
       
