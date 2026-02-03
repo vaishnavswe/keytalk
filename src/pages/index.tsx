@@ -134,7 +134,7 @@ export default function Home() {
       console.log("========== XMTP INIT END ==========");
     } catch (e) {
       console.error("========== XMTP INIT FAILED ==========");
-      console.error("Error:", e?.message || e);
+      console.error("Error:", e instanceof Error ? e.message : String(e));
       console.error("======================================");
       
       setErrorMessage(
