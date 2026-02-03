@@ -16,6 +16,43 @@ export default function Home() {
   const [initState, setInitState] = useState<InitState>("disconnected");
   const [errorMessage, setErrorMessage] = useState("");
   const initializingRef = useRef(false);
+  const [dbCleanupDone, setDbCleanupDone] = useState(false);
+
+  // Clean up any leftover XMTP databases on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const dbNames = ['xmtp_db', 'xmtpv3-dev', 'xmtpv3-production', 'xmtpv3-local'];
+      let completed = 0;
+      const total = dbNames.length;
+      
+      dbNames.forEach(dbName => {
+        const deleteRequest = indexedDB.deleteDatabase(dbName);
+        deleteRequest.onsuccess = () => {
+          completed++;
+          if (completed === total) {
+            setDbCleanupDone(true);
+          }
+        };
+        deleteRequest.onerror = () => {
+          completed++;
+          if (completed === total) {
+            setDbCleanupDone(true);
+          }
+        };
+        deleteRequest.onblocked = () => {
+          completed++;
+          if (completed === total) {
+            setDbCleanupDone(true);
+          }
+        };
+      });
+      
+      // Fallback: set cleanup done after 500ms regardless
+      setTimeout(() => setDbCleanupDone(true), 500);
+    } else {
+      setDbCleanupDone(true);
+    }
+  }, []);
 
   // Check if already initialized on mount - if so, redirect to inbox
   useEffect(() => {
@@ -37,6 +74,9 @@ export default function Home() {
 
   // Auto-initialize when wallet connects
   useEffect(() => {
+    // Wait for database cleanup to complete
+    if (!dbCleanupDone) return;
+    
     // Skip if not connected
     if (!walletClient || !isConnected) return;
     
@@ -48,7 +88,7 @@ export default function Home() {
     if (initializingRef.current) return;
 
     initializeXmtp();
-  }, [walletClient, isConnected, initState]);
+  }, [walletClient, isConnected, initState, dbCleanupDone]);
 
   async function initializeXmtp() {
     // Double check connection status before proceeding
