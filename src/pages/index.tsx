@@ -102,18 +102,17 @@ export default function Home() {
     setInitState("initializing");
     setErrorMessage("");
 
-    console.log("Starting XMTP initialization...");
+    console.log("========== XMTP INIT START ==========");
 
     try {
-      // Dynamic import to avoid SSR issues
-      console.log("Importing XMTP client...");
+      console.log("[1/3] Importing XMTP client...");
       const { createXmtpClient } = await import("../lib/xmtp/client");
       
-      console.log("Creating XMTP client with wallet...");
+      console.log("[2/3] Creating XMTP client (timeout: 45s)...");
       
-      // Add timeout to prevent hanging
+      // 45 second timeout for Vercel
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error("XMTP initialization timed out. The network may be slow or unavailable. Please try again.")), 30000);
+        setTimeout(() => reject(new Error("Connection timed out. Please refresh and try again.")), 45000);
       });
       
       const xmtp = await Promise.race([
@@ -121,25 +120,25 @@ export default function Home() {
         timeoutPromise
       ]);
       
-      console.log("XMTP client created, checking inbox ID...");
+      console.log("[3/3] Verifying inbox...");
       const id = xmtp.inboxId ?? "";
       if (!id) {
-        throw new Error("Failed to create secure inbox identity.");
+        throw new Error("Failed to create inbox. Please try again.");
       }
 
-      console.log("XMTP client ready, inbox ID:", id);
-      // Store client for use in other pages
+      console.log("✓ Success! Inbox ID:", id);
       setXmtpClient(xmtp);
       setInitState("ready");
       initializingRef.current = false;
-
-      // Auto-redirect to inbox
       router.replace("/inbox");
+      console.log("========== XMTP INIT END ==========");
     } catch (e) {
-      console.error("XMTP initialization failed:", e);
-      console.error("Error details:", JSON.stringify(e, null, 2));
+      console.error("========== XMTP INIT FAILED ==========");
+      console.error("Error:", e?.message || e);
+      console.error("======================================");
+      
       setErrorMessage(
-        e instanceof Error ? e.message : "An unexpected error occurred."
+        e instanceof Error ? e.message : "Connection failed. Please try again."
       );
       setInitState("error");
       initializingRef.current = false;
