@@ -7,9 +7,9 @@ import { walletClientToXmtpSigner } from "./signer";
 export async function createXmtpClient(walletClient: WalletClient) {
   const signer = walletClientToXmtpSigner(walletClient);
 
-  // Use dev network for now. We can switch later.
+  // Use production network for better reliability
   const client = await Client.create(signer, {
-    env: "dev",
+    env: "production",
     appVersion: "keytalk/0.1",
   });
 

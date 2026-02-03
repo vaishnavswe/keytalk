@@ -110,7 +110,16 @@ export default function Home() {
       const { createXmtpClient } = await import("../lib/xmtp/client");
       
       console.log("Creating XMTP client with wallet...");
-      const xmtp = await createXmtpClient(walletClient);
+      
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error("XMTP initialization timed out. The network may be slow or unavailable. Please try again.")), 30000);
+      });
+      
+      const xmtp = await Promise.race([
+        createXmtpClient(walletClient),
+        timeoutPromise
+      ]);
       
       console.log("XMTP client created, checking inbox ID...");
       const id = xmtp.inboxId ?? "";
