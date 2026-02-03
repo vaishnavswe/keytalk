@@ -102,16 +102,23 @@ export default function Home() {
     setInitState("initializing");
     setErrorMessage("");
 
+    console.log("Starting XMTP initialization...");
+
     try {
       // Dynamic import to avoid SSR issues
+      console.log("Importing XMTP client...");
       const { createXmtpClient } = await import("../lib/xmtp/client");
+      
+      console.log("Creating XMTP client with wallet...");
       const xmtp = await createXmtpClient(walletClient);
-
+      
+      console.log("XMTP client created, checking inbox ID...");
       const id = xmtp.inboxId ?? "";
       if (!id) {
         throw new Error("Failed to create secure inbox identity.");
       }
 
+      console.log("XMTP client ready, inbox ID:", id);
       // Store client for use in other pages
       setXmtpClient(xmtp);
       setInitState("ready");
@@ -121,6 +128,7 @@ export default function Home() {
       router.replace("/inbox");
     } catch (e) {
       console.error("XMTP initialization failed:", e);
+      console.error("Error details:", JSON.stringify(e, null, 2));
       setErrorMessage(
         e instanceof Error ? e.message : "An unexpected error occurred."
       );

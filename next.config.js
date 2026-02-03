@@ -9,6 +9,10 @@ const nextConfig = {
       net: false,
       tls: false,
     };
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@react-native-async-storage/async-storage': false,
+    };
     return config;
   },
   transpilePackages: ['@xmtp/browser-sdk'],
